@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Projet O.R.I.O.N — Dashboard HCR</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/3.0.1/chartjs-plugin-annotation.min.js"></script>
+<style>
+:root {
+  --navy:#0A2357; --blue:#1A4A9B; --sky:#2E82D4; --sky-light:#EAF3FC;
+  --gold:#F5A800; --gold-light:#FFF8E1; --gold-dark:#B87A00;
+  --white:#FFFFFF; --off:#F4F6FB; --surf:#FFFFFF; --surf2:#EEF2FA;
+  --tx1:#0A2357; --tx2:#4A5E82; --tx3:#7B8FB5;
+  --bdr:rgba(10,35,87,0.10); --bdr2:rgba(10,35,87,0.20);
+  --teal:#00A878; --teal-l:#E0F5EF;
+  --red:#D94035; --red-l:#FDECEA;
+  --amber:#E07A00; --amber-l:#FEF3E0;
+  --r-sm:6px; --r-md:10px; --r-lg:14px; --r-xl:20px;
+  --sh-sm:0 1px 4px rgba(10,35,87,0.08);
+  --sh-md:0 4px 18px rgba(10,35,87,0.11);
+  --sh-lg:0 8px 36px rgba(10,35,87,0.15);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'DM Sans',sans-serif;background:var(--off);color:var(--tx1);font-size:14px;line-height:1.5}
+
+/* TOPBAR */
+.topbar{background:var(--navy);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:62px;position:sticky;top:0;z-index:200;box-shadow:0 2px 14px rgba(0,0,0,0.22)}
+.tb-left{display:flex;align-items:center;gap:13px}
+.unhcr-box{width:40px;height:40px;background:var(--gold);border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:10px;color:var(--navy);text-align:center;line-height:1.2;padding:4px;flex-shrink:0}
+.tb-title{font-family:'DM Serif Display',serif;font-size:17px;color:#fff;letter-spacing:.03em}
+.tb-sub{font-size:10.5px;color:rgba(255,255,255,.5);margin-top:1px}
+.tb-right{display:flex;gap:6px;align-items:center}
+.npill{padding:5px 13px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:none;background:rgba(255,255,255,.1);color:rgba(255,255,255,.65);transition:all .2s;font-family:'DM Sans',sans-serif}
+.npill.active,.npill:hover{background:var(--gold);color:var(--navy);font-weight:600}
+
+/* PAGES */
+.page{display:none;padding:1.8rem 2rem 3rem;max-width:1200px;margin:0 auto;animation:fadeUp .3s ease}
+.page.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* SECTION HEADER */
+.sh{margin-bottom:1.4rem}
+.sh-title{font-family:'DM Serif Display',serif;font-size:23px;color:var(--navy)}
+.sh-desc{font-size:12.5px;color:var(--tx2);margin-top:4px}
+
+/* KPI */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:11px;margin-bottom:1.4rem}
+.kpi{background:var(--surf);border-radius:var(--r-lg);padding:17px 19px;box-shadow:var(--sh-sm);border:1px solid var(--bdr);border-left:4px solid transparent;transition:transform .2s,box-shadow .2s;cursor:default}
+.kpi:hover{transform:translateY(-2px);box-shadow:var(--sh-md)}
+.kpi.kn{border-left-color:var(--navy)} .kpi.kg{border-left-color:var(--gold)} .kpi.kt{border-left-color:var(--teal)} .kpi.kr{border-left-color:var(--red)} .kpi.ks{border-left-color:var(--sky)} .kpi.ka{border-left-color:var(--amber)}
+.kpi-lbl{font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin-bottom:7px}
+.kpi-val{font-size:26px;font-weight:700;color:var(--navy);line-height:1}
+.kpi-sub{font-size:11px;color:var(--tx3);margin-top:5px}
+.pill{display:inline-block;font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;margin-top:5px}
+.pill-up{background:var(--teal-l);color:var(--teal)} .pill-dn{background:var(--red-l);color:var(--red)} .pill-neu{background:var(--surf2);color:var(--tx2)}
+
+/* LAYOUTS */
+.r2{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-bottom:13px}
+.r3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:13px;margin-bottom:13px}
+.rwn{display:grid;grid-template-columns:1.6fr 1fr;gap:13px;margin-bottom:13px}
+.rnw{display:grid;grid-template-columns:1fr 1.6fr;gap:13px;margin-bottom:13px}
+
+/* CARD */
+.card{background:var(--surf);border-radius:var(--r-lg);padding:19px 21px;box-shadow:var(--sh-sm);border:1px solid var(--bdr)}
+.ct{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin-bottom:15px;display:flex;align-items:center;gap:8px}
+.ct-ico{width:27px;height:27px;border-radius:var(--r-sm);background:var(--surf2);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.cw{position:relative;width:100%}
+
+/* FILTER */
+.fbar{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
+.fbtn{padding:5px 13px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1.5px solid var(--bdr2);background:transparent;color:var(--tx2);transition:all .18s;font-family:'DM Sans',sans-serif}
+.fbtn:hover{border-color:var(--sky);color:var(--sky)}
+.fbtn.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+
+/* COUNTRY BARS */
+.cbar{display:flex;align-items:center;gap:9px;margin-bottom:7px}
+.cbar-n{font-size:11.5px;color:var(--tx2);width:90px;flex-shrink:0;text-align:right}
+.cbar-o{flex:1;background:var(--surf2);border-radius:4px;height:12px;overflow:hidden}
+.cbar-i{height:100%;border-radius:4px;transition:width .9s cubic-bezier(.4,0,.2,1)}
+.cbar-v{font-size:12px;font-weight:700;width:42px}
+
+/* HYP */
+.hgrid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.hcard{border-radius:var(--r-lg);padding:17px 19px;background:var(--surf);border:1px solid var(--bdr);box-shadow:var(--sh-sm);transition:transform .2s,box-shadow .2s}
+.hcard:hover{transform:translateY(-2px);box-shadow:var(--sh-md)}
+.hhead{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:9px;gap:8px}
+.hlbl{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3)}
+.hbadge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;white-space:nowrap}
+.bc{background:var(--teal-l);color:var(--teal)} .bx{background:var(--red-l);color:var(--red)} .bp{background:var(--amber-l);color:var(--amber)}
+.hstat{font-size:21px;font-weight:700;color:var(--navy);margin-bottom:5px}
+.hdesc{font-size:11.5px;color:var(--tx2);line-height:1.6}
+
+/* ORIGIN */
+.orow{display:flex;align-items:center;gap:11px;padding:8px 0;border-bottom:1px solid var(--bdr)}
+.orow:last-child{border-bottom:none}
+.orn{font-size:10.5px;font-weight:700;color:var(--tx3);width:16px;text-align:right}
+.oname{font-size:13px;font-weight:500;color:var(--tx1);flex:1}
+.odec{font-size:11px;color:var(--tx3)}
+.obw{width:75px;background:var(--surf2);border-radius:3px;height:5px}
+.ob{height:5px;border-radius:3px}
+.orate{font-size:13px;font-weight:700;width:45px;text-align:right}
+
+/* TIMELINE */
+.timeline{position:relative;padding-left:26px}
+.timeline::before{content:'';position:absolute;left:7px;top:6px;bottom:6px;width:2px;background:var(--bdr2)}
+.tli{position:relative;margin-bottom:18px}
+.tli:last-child{margin-bottom:0}
+.tldot{position:absolute;left:-22px;top:4px;width:10px;height:10px;border-radius:50%;border:2.5px solid var(--navy);background:#fff}
+.tlyear{font-size:11px;font-weight:700;color:var(--navy)}
+.tlrate{font-size:15px;font-weight:700;color:var(--sky);margin:1px 0}
+.tltext{font-size:11.5px;color:var(--tx2);line-height:1.5}
+.tlctx{display:inline-block;font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:20px;margin-top:3px}
+
+/* SCATTER TOOLTIP */
+#scatterTooltip{position:fixed;background:var(--navy);color:#fff;padding:10px 14px;border-radius:var(--r-md);font-size:12px;pointer-events:none;display:none;z-index:300;box-shadow:var(--sh-lg);max-width:200px;line-height:1.6}
+
+/* GROUP */
+.gcard{border-radius:var(--r-lg);padding:19px;border:1px solid var(--bdr);box-shadow:var(--sh-sm);border-top:4px solid transparent;transition:transform .2s}
+.gcard:hover{transform:translateY(-2px)}
+.gc-t{border-top-color:var(--teal);background:linear-gradient(160deg,#F0FBF7 0%,#fff 60%)}
+.gc-b{border-top-color:var(--sky);background:linear-gradient(160deg,#EAF3FC 0%,#fff 60%)}
+.gc-r{border-top-color:var(--red);background:linear-gradient(160deg,#FEF0EF 0%,#fff 60%)}
+.gctit{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:11px}
+.gc-t .gctit{color:var(--teal)} .gc-b .gctit{color:var(--sky)} .gc-r .gctit{color:var(--red)}
+.gccountries{font-size:12.5px;color:var(--tx2);line-height:2}
+.gcrate{font-size:26px;font-weight:700;margin-top:13px}
+.gc-t .gcrate{color:var(--teal)} .gc-b .gcrate{color:var(--sky)} .gc-r .gcrate{color:var(--red)}
+.gcrlbl{font-size:11px;color:var(--tx3)}
+
+/* STAT ROW */
+.sr{display:flex;flex-wrap:wrap;gap:18px;padding:11px 15px;background:var(--surf2);border-radius:var(--r-md);margin-top:11px;font-size:12.5px;color:var(--tx2)}
+.sv{font-weight:700;color:var(--navy);font-size:14px}
+.sg{color:var(--teal);font-weight:700} .sb{color:var(--red);font-weight:700}
+
+/* META */
+.mgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:10px}
+.mcell{background:var(--surf);border-radius:var(--r-md);padding:15px;text-align:center;border:1px solid var(--bdr);transition:transform .2s}
+.mcell:hover{transform:translateY(-2px)}
+.mv{font-size:23px;font-weight:700;color:var(--navy)} .ml{font-size:11px;color:var(--tx3);margin-top:4px;line-height:1.4}
+
+/* CONCLUSION */
+.cbox{background:var(--navy);color:#fff;border-radius:var(--r-lg);padding:22px 26px;margin-bottom:13px}
+.cblbl{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--gold);margin-bottom:9px}
+.cbtext{font-size:13.5px;line-height:1.7;color:rgba(255,255,255,.85)}
+.cbstat{font-size:21px;font-weight:700;color:var(--gold);margin:8px 0 4px}
+
+/* LIMIT */
+.litem{display:flex;gap:11px;padding:11px 0;border-bottom:1px solid var(--bdr)}
+.litem:last-child{border-bottom:none}
+.lic{width:31px;height:31px;border-radius:var(--r-sm);background:var(--amber-l);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.litem h4{font-size:12.5px;font-weight:600;color:var(--tx1);margin-bottom:3px}
+.litem p{font-size:11.5px;color:var(--tx2);line-height:1.5}
+
+/* RECO */
+.ritem{display:flex;gap:11px;padding:11px 0;border-bottom:1px solid var(--bdr)}
+.ritem:last-child{border-bottom:none}
+.rnum{width:27px;height:27px;border-radius:50%;background:var(--navy);color:var(--gold);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.ritem h4{font-size:12.5px;font-weight:600;color:var(--tx1);margin-bottom:3px}
+.ritem p{font-size:11.5px;color:var(--tx2);line-height:1.5}
+
+/* EVENT ANNOTATION LEGEND */
+.ann-legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;font-size:11.5px;color:var(--tx2)}
+.al-item{display:flex;align-items:center;gap:5px}
+.al-line{width:20px;height:2px;border-top:2px dashed}
+
+/* BUBBLE CHART LEGEND */
+.blgd{display:flex;flex-wrap:wrap;gap:14px;margin-top:10px;font-size:11.5px;color:var(--tx2)}
+.blgi{display:flex;align-items:center;gap:5px}
+.blgdot{width:10px;height:10px;border-radius:50%}
+
+/* FOOTER */
+.footer{background:var(--navy);color:rgba(255,255,255,.45);padding:14px 2rem;font-size:10.5px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-top:2.5rem}
+.footer strong{color:var(--gold)}
+
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(10,35,87,.15);border-radius:3px}
+
+@media(max-width:700px){
+  .r2,.r3,.rwn,.rnw,.hgrid{grid-template-columns:1fr}
+  .tb-right{display:none}
+  .page{padding:1rem 1rem 2.5rem}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="tb-left">
+    <div class="unhcr-box">UN<br>HCR</div>
+    <div>
+      <div class="tb-title">Projet O.R.I.O.N</div>
+      <div class="tb-sub">Observatoire des Réponses et Indicateurs de l'Octroi en Niveau d'asile · Bureau Europe · 2015–2023</div>
+    </div>
+  </div>
+  <div class="tb-right">
+    <button class="npill active" onclick="nav('overview',this)">Vue d'ensemble</button>
+    <button class="npill" onclick="nav('pays',this)">Pays d'accueil</button>
+    <button class="npill" onclick="nav('hypotheses',this)">Hypothèses</button>
+    <button class="npill" onclick="nav('origines',this)">Pays d'origine</button>
+    <button class="npill" onclick="nav('conclusions',this)">Conclusions</button>
+  </div>
+</div>
+
+<!-- PAGE 1 — VUE D'ENSEMBLE -->
+<div class="page active" id="page-overview">
+  <div class="sh">
+    <div class="sh-title">Vue d'ensemble · 2015–2023</div>
+    <div class="sh-desc">1 239 953 décisions de 1re instance · 29 pays d'accueil européens · 54 pays africains d'origine · 6 sources officielles</div>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi kn"><div class="kpi-lbl">Taux d'acceptation moyen</div><div class="kpi-val">19,5 %</div><div class="kpi-sub">Pondéré par volume · 1re instance</div></div>
+    <div class="kpi kg"><div class="kpi-lbl">Amplitude des pratiques</div><div class="kpi-val">61,2 pts</div><div class="kpi-sub">0 % (LV/SK) → 61,2 % (NO)</div><span class="pill pill-dn">Absence de convergence RAEC</span></div>
+    <div class="kpi kt"><div class="kpi-lbl">Corrélation PIB / taux</div><div class="kpi-val">r = 0,754</div><div class="kpi-sub">p &lt; 0,001 · Spearman r = 0,732</div><span class="pill pill-up">✓ Facteur principal</span></div>
+    <div class="kpi kr"><div class="kpi-lbl">Chute pic migratoire</div><div class="kpi-val">−6,2 pts</div><div class="kpi-sub">2015 → 2016 · Crise syrienne</div><span class="pill pill-dn">↓ Resserrement brutal</span></div>
+    <div class="kpi ks"><div class="kpi-lbl">Plancher historique</div><div class="kpi-val">16,1 %</div><div class="kpi-sub">2018 · Politiques les plus restrictives</div></div>
+    <div class="kpi ka"><div class="kpi-lbl">Médiane des dyades</div><div class="kpi-val">0,0 %</div><div class="kpi-sub">&gt;50 % des combinaisons à 0 %</div></div>
+  </div>
+
+  <div class="rwn">
+    <div class="card">
+      <div class="ct"><div class="ct-ico">📈</div>Évolution temporelle du taux moyen — avec contexte géopolitique</div>
+      <div class="cw" style="height:260px">
+        <canvas id="timeChart" role="img" aria-label="Évolution du taux d'acceptation 2015-2023 avec annotations des événements clés">2015:24.3% → 2018:16.1%(plancher) → 2023:21.4%</canvas>
+      </div>
+      <div class="ann-legend">
+        <span class="al-item"><span class="al-line" style="border-color:#D94035"></span>Crise migratoire / pic</span>
+        <span class="al-item"><span class="al-line" style="border-color:#F5A800"></span>Tournant politique</span>
+        <span class="al-item"><span class="al-line" style="border-color:#00A878"></span>Reprise / normalisation</span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ct"><div class="ct-ico">🌍</div>Top pays d'origine · taux d'acceptation</div>
+      <div id="origin-list"></div>
+      <div style="margin-top:12px;padding:10px;background:var(--surf2);border-radius:var(--r-md);font-size:11px;color:var(--tx3);line-height:1.6">
+        Les pays en situation de crise politique ou de conflit armé obtiennent systématiquement les taux les plus élevés en Europe (H2 — confirmation qualitative).
+      </div>
+    </div>
+  </div>
+
+  <div class="mgrid" style="margin-bottom:13px">
+    <div class="mcell"><div class="mv">4 867</div><div class="ml">Combinaisons pays × origine × année</div></div>
+    <div class="mcell"><div class="mv">6</div><div class="ml">Sources officielles fusionnées</div></div>
+    <div class="mcell"><div class="mv">9 ans</div><div class="ml">Couverture 2015–2023</div></div>
+    <div class="mcell"><div class="mv">1,24 M</div><div class="ml">Décisions de 1re instance</div></div>
+    <div class="mcell"><div class="mv">15</div><div class="ml">Variables analytiques</div></div>
+    <div class="mcell"><div class="mv">Python</div><div class="ml">pandas · scipy · SQLite · Jupyter</div></div>
+  </div>
+</div>
+
+<!-- PAGE 2 — PAYS D'ACCUEIL -->
+<div class="page" id="page-pays">
+  <div class="sh">
+    <div class="sh-title">Pays d'accueil européens</div>
+    <div class="sh-desc">Taux d'acceptation moyen des demandes africaines · 29 pays · 2015–2023 · Corrélation PIB confirmée (r = 0,754)</div>
+  </div>
+
+  <div class="fbar">
+    <button class="fbtn active" onclick="filterGroup('all',this)">Tous les pays</button>
+    <button class="fbtn" onclick="filterGroup('Très accueillant',this)">🟢 Très accueillants (&gt;38%)</button>
+    <button class="fbtn" onclick="filterGroup('Intermédiaire',this)">🔵 Intermédiaires (20–38%)</button>
+    <button class="fbtn" onclick="filterGroup('Très restrictif',this)">🔴 Très restrictifs (&lt;10%)</button>
+  </div>
+
+  <div class="r2">
+    <div class="card">
+      <div class="ct"><div class="ct-ico">🏛️</div>Classement · taux d'acceptation par pays</div>
+      <div id="country-bars"></div>
+    </div>
+    <div class="card">
+      <div class="ct"><div class="ct-ico">💰</div>PIB/habitant vs Taux d'acceptation — H4 ✅</div>
+      <div class="cw" style="height:270px">
+        <canvas id="scatterChart" role="img" aria-label="Nuage de points PIB par habitant versus taux d'acceptation par pays">Corrélation positive forte r=0.754</canvas>
+      </div>
+      <div class="blgd">
+        <span class="blgi"><span class="blgdot" style="background:#00A878"></span>Très accueillant</span>
+        <span class="blgi"><span class="blgdot" style="background:#2E82D4"></span>Intermédiaire</span>
+        <span class="blgi"><span class="blgdot" style="background:#D94035"></span>Très restrictif</span>
+      </div>
+      <div class="sr">
+        <span>Pearson : <span class="sv">r = 0,754</span></span>
+        <span>Spearman : <span class="sv">r = 0,732</span></span>
+        <span class="sg">p &lt; 0,001</span>
+        <span>Écart PIB élevé–faible : <span class="sv">+31,3 pts</span></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="r2" style="margin-bottom:13px">
+    <div class="card">
+      <div class="ct"><div class="ct-ico">📊</div>Taux moyen par groupe PIB</div>
+      <div class="cw" style="height:200px">
+        <canvas id="gdpGroupChart" role="img" aria-label="Taux moyen par groupe PIB: élevé 40.2%, moyen 12.5%, faible 8.9%">PIB élevé:40.2% PIB moyen:12.5% PIB faible:8.9%</canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ct"><div class="ct-ico">🗂️</div>3 groupes de pays d'accueil</div>
+      <div style="display:grid;grid-template-columns:1fr;gap:9px">
+        <div style="border-radius:var(--r-md);border-left:4px solid var(--teal);padding:11px 14px;background:var(--teal-l)">
+          <div style="font-size:11px;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Très accueillants · 39–61%</div>
+          <div style="font-size:12.5px;color:var(--tx2)">Norvège · Danemark · Luxembourg · Belgique · Pays-Bas</div>
+          <div style="font-size:18px;font-weight:700;color:var(--teal);margin-top:5px">40,2 % <span style="font-size:11px;font-weight:400;color:var(--tx3)">taux moyen</span></div>
+        </div>
+        <div style="border-radius:var(--r-md);border-left:4px solid var(--sky);padding:11px 14px;background:var(--sky-light)">
+          <div style="font-size:11px;font-weight:700;color:var(--sky);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Intermédiaires · 20–38%</div>
+          <div style="font-size:12.5px;color:var(--tx2)">Suède · Finlande · Suisse · Allemagne · Irlande · Grèce · France</div>
+          <div style="font-size:18px;font-weight:700;color:var(--sky);margin-top:5px">12,5 % <span style="font-size:11px;font-weight:400;color:var(--tx3)">taux moyen</span></div>
+        </div>
+        <div style="border-radius:var(--r-md);border-left:4px solid var(--red);padding:11px 14px;background:var(--red-l)">
+          <div style="font-size:11px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Très restrictifs · 0–7%</div>
+          <div style="font-size:12.5px;color:var(--tx2)">Italie · Pologne · Croatie · Hongrie · Bulgarie · Slovénie · Lettonie · Slovaquie</div>
+          <div style="font-size:18px;font-weight:700;color:var(--red);margin-top:5px">8,9 % <span style="font-size:11px;font-weight:400;color:var(--tx3)">taux moyen</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 3 — HYPOTHÈSES -->
+<div class="page" id="page-hypotheses">
+  <div class="sh">
+    <div class="sh-title">Test des 4 hypothèses</div>
+    <div class="sh-desc">Résultats statistiques sur 1 239 953 décisions · Corrélations Pearson & Spearman · scipy.stats · Python 3.11</div>
+  </div>
+
+  <div class="hgrid" style="margin-bottom:13px">
+    <div class="hcard">
+      <div class="hhead"><div class="hlbl">H1 — Volume de demandes</div><span class="hbadge bx">❌ Infirmée</span></div>
+      <div class="hstat">r = 0,022 · p = 0,739</div>
+      <div class="hdesc">Le volume de demandes reçues n'exerce aucune pression mesurable sur la sélectivité des décisions. La France avec 33 000+ demandes africaines/an maintient un taux stable de 20 %, identique à des pays recevant 10× moins. L'idée d'un "effet de saturation" est statistiquement invalidée.</div>
+    </div>
+    <div class="hcard">
+      <div class="hhead"><div class="hlbl">H2 — Pays d'origine en crise</div><span class="hbadge bp">⚠️ Partielle</span></div>
+      <div class="hstat">r = −0,016 · p = 0,731</div>
+      <div class="hdesc">Statistiquement non significatif, mais confirmation qualitative forte : Érythrée (66,8 %), Burundi (57,8 %), Soudan (41,3 %). Limite : EM-DAT recense les catastrophes naturelles mais pas les conflits armés et persécutions politiques, principale raison de fuite pour les demandeurs africains.</div>
+    </div>
+    <div class="hcard">
+      <div class="hhead"><div class="hlbl">H3 — Effet temporel</div><span class="hbadge bc">✅ Confirmée</span></div>
+      <div class="hstat">Δ = 8,2 pts · 2015–2023</div>
+      <div class="hdesc">Chute brutale de 6,2 pts entre 2015 (24,3 %) et 2016 (18,0 %) lors du pic migratoire européen lié à la crise syrienne et à l'intensification des flux africains. Plancher à 16,1 % en 2018 (politiques restrictives). Remontée à 21,4 % en 2023 après normalisation.</div>
+    </div>
+    <div class="hcard">
+      <div class="hhead"><div class="hlbl">H4 — Facteur économique (PIB)</div><span class="hbadge bc">✅ Confirmée</span></div>
+      <div class="hstat">r = 0,754 · p &lt; 0,001</div>
+      <div class="hdesc">Résultat le plus robuste de l'analyse. Confirmé par Spearman (r = 0,732), signe d'une relation de rang. Les pays à PIB élevé acceptent 40,2 % des demandes contre 8,9 % pour les pays à faible PIB — écart de 31,3 points. Les capacités économiques d'accueil conditionnent directement les décisions politiques.</div>
+    </div>
+  </div>
+
+  <div class="r2">
+    <div class="card">
+      <div class="ct"><div class="ct-ico">📊</div>Force des corrélations par hypothèse</div>
+      <div class="cw" style="height:220px">
+        <canvas id="hypChart" role="img" aria-label="Force des corrélations: H1 0.022 H2 0.016 H4 0.754 confirmés/infirmés">H1 et H2 non significatifs, H4 très fort</canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ct"><div class="ct-ico">🕐</div>Chronologie · contexte géopolitique</div>
+      <div class="timeline" id="timeline-content"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 4 — PAYS D'ORIGINE -->
+<div class="page" id="page-origines">
+  <div class="sh">
+    <div class="sh-title">Pays d'origine africains</div>
+    <div class="sh-desc">Taux d'acceptation en Europe par pays africain d'origine · 54 pays · 2015–2023</div>
+  </div>
+
+  <div class="fbar">
+    <button class="fbtn active" onclick="filterOrigin('all',this)">Tous</button>
+    <button class="fbtn" onclick="filterOrigin('conflit',this)">⚔️ Pays en conflit</button>
+    <button class="fbtn" onclick="filterOrigin('stable',this)">✅ Pays stables</button>
+    <button class="fbtn" onclick="filterOrigin('est',this)">Afrique de l'Est</button>
+    <button class="fbtn" onclick="filterOrigin('ouest',this)">Afrique de l'Ouest</button>
+    <button class="fbtn" onclick="filterOrigin('nord',this)">Afrique du Nord</button>
+  </div>
+
+  <div class="r2">
+    <div class="card">
+      <div class="ct"><div class="ct-ico">🌍</div>Taux d'acceptation par pays d'origine</div>
+      <div class="cw" style="height:340px">
+        <canvas id="originChart" role="img" aria-label="Taux d'acceptation par pays africain d'origine, Érythrée en tête à 66.8%">Érythrée 66.8%, Burundi 57.8%, Soudan 41.3%...</canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ct"><div class="ct-ico">📋</div>Détail par pays d'origine</div>
+      <div id="origin-detail"></div>
+    </div>
+  </div>
+
+  <div class="r2">
+    <div class="card">
+      <div class="ct"><div class="ct-ico">📊</div>Taux moyen par région africaine</div>
+      <div class="cw" style="height:220px">
+        <canvas id="regionChart" role="img" aria-label="Taux moyen par région africaine">Est 35.5%, Centrale 28.4%, Ouest 18.2%, Nord 5.6%</canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ct"><div class="ct-ico">⚖️</div>Comparaison pays en crise vs pays stables</div>
+      <div class="cw" style="height:220px">
+        <canvas id="crisisChart" role="img" aria-label="Comparaison taux pays en crise vs stables">Pays en crise 38.5% vs pays stables 6.8%</canvas>
+      </div>
+      <div class="sr">
+        <span>Pays en crise/conflit : <span class="sg">38,5 %</span></span>
+        <span>Pays stables : <span class="sb">6,8 %</span></span>
+        <span>Écart : <span class="sv">+31,7 pts</span></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 5 — CONCLUSIONS -->
+<div class="page" id="page-conclusions">
+  <div class="sh">
+    <div class="sh-title">Conclusions & Recommandations</div>
+    <div class="sh-desc">Réponse argumentée à la problématique centrale · Limites analytiques · Pistes de prolongement</div>
+  </div>
+
+  <div class="cbox">
+    <div class="cblbl">Problématique centrale</div>
+    <div class="cbtext" style="font-style:italic;font-size:15px;margin-bottom:10px">"Pourquoi les taux d'acceptation des demandes d'asile africaines varient-ils entre les pays européens ?"</div>
+    <div class="cbstat">2 facteurs principaux expliquent l'écart de 0 % (Lettonie) à 61,2 % (Norvège)</div>
+    <div class="cbtext">① Le niveau économique du pays d'accueil (r = 0,754, p &lt; 0,001) — facteur le plus déterminant, confirmé par Pearson et Spearman<br>② L'effet des crises migratoires sur les politiques nationales (Δ = 8,2 pts sur 9 ans) — visible lors du pic 2015–2016 (crise syrienne)</div>
+  </div>
+
+  <div class="r2">
+    <div class="card">
+      <div class="ct"><div class="ct-ico">📊</div>Synthèse des 4 hypothèses</div>
+      <div class="cw" style="height:230px">
+        <canvas id="synthChart" role="img" aria-label="Radar synthèse des 4 hypothèses">H1 infirmée, H2 partielle, H3 confirmée, H4 très confirmée</canvas>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ct"><div class="ct-ico">⚠️</div>Limites de l'analyse</div>
+      <div class="litem"><div class="lic">📉</div><div><h4>Indicateur de crise insuffisant</h4><p>EM-DAT recense catastrophes naturelles mais pas les conflits armés — principale raison de fuite. H2 est sous-estimée. Solution : intégrer ACLED.</p></div></div>
+      <div class="litem"><div class="lic">⚖️</div><div><h4>Première instance uniquement</h4><p>Les taux finaux après recours peuvent être sensiblement différents de la protection accordée in fine.</p></div></div>
+      <div class="litem"><div class="lic">🌍</div><div><h4>Hétérogénéité des définitions</h4><p>La "protection humanitaire" n'est pas définie identiquement dans tous les États membres — biais dans les comparaisons directes.</p></div></div>
+      <div class="litem"><div class="lic">🔗</div><div><h4>Corrélation ≠ Causalité</h4><p>r = 0,754 ne prouve pas que la richesse cause l'acceptation. Traditions juridiques et accords bilatéraux peuvent expliquer une partie des écarts.</p></div></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:13px">
+    <div class="ct"><div class="ct-ico">🚀</div>Pistes d'amélioration et de prolongement</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px">
+      <div class="ritem" style="border:none;padding:0"><div class="rnum">1</div><div><h4>Intégrer les données ACLED</h4><p>Armed Conflict Location & Event Data pour mesurer l'intensité réelle des conflits armés dans les pays d'origine.</p></div></div>
+      <div class="ritem" style="border:none;padding:0"><div class="rnum">2</div><div><h4>Ajouter l'indice MIPEX</h4><p>Migration Integration Policy Index pour capturer les orientations politiques nationales au-delà du seul facteur économique.</p></div></div>
+      <div class="ritem" style="border:none;padding:0"><div class="rnum">3</div><div><h4>Régression multiple</h4><p>Modèle taux ~ PIB + période + crise + volume pour quantifier la contribution relative de chaque facteur.</p></div></div>
+      <div class="ritem" style="border:none;padding:0"><div class="rnum">4</div><div><h4>Décisions en appel</h4><p>Inclure les recours pour obtenir les taux finaux réels, plus représentatifs de la protection accordée in fine.</p></div></div>
+      <div class="ritem" style="border:none;padding:0"><div class="rnum">5</div><div><h4>Élargissement géographique</h4><p>Étendre à d'autres continents d'origine (Asie, Moyen-Orient) pour vérifier si les facteurs sont universels.</p></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  <span><strong>Projet O.R.I.O.N</strong> · FANGNON Ornella · Bachelor 2 Data & BI · NEXA Digital School</span>
+  <span>Sources : UNHCR Refugee Data Finder · Eurostat · EM-DAT/CRED · Période 2015–2023 · 29 pays · 1 239 953 décisions</span>
+</div>
+
+<div id="scatterTooltip"></div>
+
+<script>
+// ——— DATA ———
+const allCountries = [
+  {name:"Norvège",iso:"NO",rate:61.2,pib:82340,group:"Très accueillant"},
+  {name:"Danemark",iso:"DK",rate:58.2,pib:61230,group:"Très accueillant"},
+  {name:"Luxembourg",iso:"LU",rate:55.8,pib:78920,group:"Très accueillant"},
+  {name:"Belgique",iso:"BE",rate:48.1,pib:44560,group:"Très accueillant"},
+  {name:"Pays-Bas",iso:"NL",rate:39.4,pib:52340,group:"Très accueillant"},
+  {name:"Suède",iso:"SE",rate:35.2,pib:51230,group:"Intermédiaire"},
+  {name:"Finlande",iso:"FI",rate:31.8,pib:47890,group:"Intermédiaire"},
+  {name:"Suisse",iso:"CH",rate:28.7,pib:78450,group:"Intermédiaire"},
+  {name:"Allemagne",iso:"DE",rate:25.6,pib:43210,group:"Intermédiaire"},
+  {name:"Irlande",iso:"IE",rate:23.9,pib:87650,group:"Intermédiaire"},
+  {name:"France",iso:"FR",rate:20.8,pib:38760,group:"Intermédiaire"},
+  {name:"Grèce",iso:"GR",rate:20.1,pib:17890,group:"Intermédiaire"},
+  {name:"Autriche",iso:"AT",rate:18.4,pib:46230,group:"Intermédiaire"},
+  {name:"Espagne",iso:"ES",rate:15.2,pib:27890,group:"Intermédiaire"},
+  {name:"Portugal",iso:"PT",rate:13.7,pib:21340,group:"Intermédiaire"},
+  {name:"Chypre",iso:"CY",rate:12.1,pib:24560,group:"Intermédiaire"},
+  {name:"Italie",iso:"IT",rate:6.8,pib:26540,group:"Très restrictif"},
+  {name:"Pologne",iso:"PL",rate:6.3,pib:14560,group:"Très restrictif"},
+  {name:"Croatie",iso:"HR",rate:4.1,pib:14230,group:"Très restrictif"},
+  {name:"Hongrie",iso:"HU",rate:2.8,pib:15230,group:"Très restrictif"},
+  {name:"Roumanie",iso:"RO",rate:2.1,pib:12890,group:"Très restrictif"},
+  {name:"Bulgarie",iso:"BG",rate:1.4,pib:9870,group:"Très restrictif"},
+  {name:"Slovénie",iso:"SI",rate:1.2,pib:23450,group:"Très restrictif"},
+  {name:"Rép. Tchèque",iso:"CZ",rate:0.9,pib:22340,group:"Très restrictif"},
+  {name:"Lettonie",iso:"LV",rate:0.0,pib:15670,group:"Très restrictif"},
+  {name:"Slovaquie",iso:"SK",rate:0.0,pib:18760,group:"Très restrictif"},
+];
+const gCol = {"Très accueillant":"#00A878","Intermédiaire":"#2E82D4","Très restrictif":"#D94035"};
+
+const allOrigins = [
+  {name:"Érythrée",region:"est",statut:"conflit",rate:66.8,dec:126203},
+  {name:"Burundi",region:"est",statut:"conflit",rate:57.8,dec:9556},
+  {name:"Soudan",region:"nord",statut:"conflit",rate:41.3,dec:47768},
+  {name:"Rép. Centrafricaine",region:"centrale",statut:"conflit",rate:41.2,dec:7240},
+  {name:"Soudan du Sud",region:"est",statut:"conflit",rate:39.7,dec:1205},
+  {name:"Somalie",region:"est",statut:"conflit",rate:32.2,dec:88068},
+  {name:"Guinée",region:"ouest",statut:"conflit",rate:28.4,dec:34560},
+  {name:"Mali",region:"ouest",statut:"conflit",rate:26.7,dec:18930},
+  {name:"RDC Congo",region:"centrale",statut:"conflit",rate:24.1,dec:67450},
+  {name:"Cameroun",region:"centrale",statut:"conflit",rate:21.3,dec:28760},
+  {name:"Nigeria",region:"ouest",statut:"conflit",rate:19.8,dec:89340},
+  {name:"Éthiopie",region:"est",statut:"conflit",rate:18.9,dec:34560},
+  {name:"Mozambique",region:"centrale",statut:"conflit",rate:15.4,dec:8760},
+  {name:"Sénégal",region:"ouest",statut:"stable",rate:8.2,dec:23450},
+  {name:"Côte d'Ivoire",region:"ouest",statut:"stable",rate:7.6,dec:34120},
+  {name:"Maroc",region:"nord",statut:"stable",rate:6.4,dec:67890},
+  {name:"Algérie",region:"nord",statut:"stable",rate:5.1,dec:45670},
+  {name:"Tunisie",region:"nord",statut:"stable",rate:4.3,dec:23450},
+  {name:"Ghana",region:"ouest",statut:"stable",rate:3.8,dec:12340},
+  {name:"Égypte",region:"nord",statut:"stable",rate:3.2,dec:19870},
+];
+
+const timelineData = [
+  {year:"2015",rate:"24,3 %",dot:"#00A878",ctxClass:"",ctxBg:"#E0F5EF",ctxCol:"#00A878",text:"Forte pression migratoire",ctx:"Début de la crise migratoire européenne — intensification des flux africains via la route méditerranéenne"},
+  {year:"2016",rate:"18,0 % (−6,2 pts)",dot:"#D94035",ctxBg:"#FDECEA",ctxCol:"#D94035",text:"Pic migratoire & crise syrienne",ctx:"Afflux massif lié à la guerre civile syrienne et aux conflits africains — Accord UE-Turquie mars 2016 — resserrement brutal des critères d'acceptation"},
+  {year:"2017",rate:"17,4 %",dot:"#E07A00",ctxBg:"#FEF3E0",ctxCol:"#E07A00",text:"Montée des partis nationalistes",ctx:"Résistance politique croissante à l'accueil — pressions internes dans plusieurs États membres (Italie, Hongrie, Pologne)"},
+  {year:"2018",rate:"16,1 % — Plancher",dot:"#D94035",ctxBg:"#FDECEA",ctxCol:"#D94035",text:"Politiques les plus restrictives",ctx:"Renforcement des contrôles aux frontières — Accord de Malte — fermeture des ports italiens — taux d'acceptation au plus bas"},
+  {year:"2019",rate:"17,2 %",dot:"#7B8FB5",ctxBg:"#EEF2FA",ctxCol:"#4A5E82",text:"Légère stabilisation",ctx:"Baisse relative des flux — premiers signes de normalisation des politiques dans certains pays nordiques"},
+  {year:"2020",rate:"18,5 %",dot:"#7B8FB5",ctxBg:"#EEF2FA",ctxCol:"#4A5E82",text:"COVID-19 — baisse des flux",ctx:"Pandémie mondiale — fermetures des frontières — forte baisse des demandes déposées — taux relatif en légère hausse mécaniquement"},
+  {year:"2021",rate:"19,8 %",dot:"#2E82D4",ctxBg:"#EAF3FC",ctxCol:"#1A4A9B",text:"Reprise post-COVID",ctx:"Reprise des mouvements migratoires — nouvelles crises (Afghanistan, Sahel) — hausse du nombre de demandes acceptées"},
+  {year:"2022",rate:"20,9 %",dot:"#2E82D4",ctxBg:"#EAF3FC",ctxCol:"#1A4A9B",text:"Remontée progressive",ctx:"Crise ukrainienne — redistribution des ressources d'accueil — légère amélioration des taux pour les demandeurs africains"},
+  {year:"2023",rate:"21,4 %",dot:"#00A878",ctxBg:"#E0F5EF",ctxCol:"#00A878",text:"Normalisation relative",ctx:"Stabilisation des politiques — remontée à 21,4 % soit +5,3 pts depuis le plancher 2018 — écart reste important avec les standards pré-crise"},
+];
+
+// ——— NAV ———
+function nav(id,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.npill').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ——— ORIGIN LIST (overview) ———
+const ol=document.getElementById('origin-list');
+allOrigins.slice(0,6).forEach((o,i)=>{
+  const pct=(o.rate/67*100).toFixed(1);
+  const col=o.rate>50?'#00A878':o.rate>35?'#2E82D4':'#E07A00';
+  ol.innerHTML+=`<div class="orow"><div class="orn">${i+1}</div><div><div class="oname">${o.name}</div><div class="odec">${o.dec.toLocaleString('fr-FR')} décisions</div></div><div class="obw"><div class="ob" style="width:${pct}%;background:${col}"></div></div><div class="orate" style="color:${col}">${o.rate.toFixed(1)}%</div></div>`;
+});
+
+// ——— COUNTRY BARS ———
+function renderBars(filter){
+  const c=document.getElementById('country-bars');
+  c.innerHTML='';
+  const data=filter==='all'?allCountries:allCountries.filter(x=>x.group===filter);
+  data.forEach(d=>{
+    const pct=(d.rate/61.2*100).toFixed(1);
+    const col=gCol[d.group];
+    c.innerHTML+=`<div class="cbar"><div class="cbar-n">${d.name}</div><div class="cbar-o"><div class="cbar-i" style="width:${pct}%;background:${col}"></div></div><div class="cbar-v" style="color:${col}">${d.rate.toFixed(1)}%</div></div>`;
+  });
+}
+renderBars('all');
+function filterGroup(g,btn){document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderBars(g);}
+
+// ——— ORIGIN DETAIL ———
+function renderOriginDetail(filter){
+  const c=document.getElementById('origin-detail');
+  c.innerHTML='';
+  let data=allOrigins;
+  if(filter==='conflit') data=data.filter(x=>x.statut==='conflit');
+  else if(filter==='stable') data=data.filter(x=>x.statut==='stable');
+  else if(['est','ouest','nord','centrale'].includes(filter)) data=data.filter(x=>x.region===filter);
+  data.forEach((o,i)=>{
+    const pct=(o.rate/67*100).toFixed(1);
+    const col=o.rate>40?'#00A878':o.rate>20?'#2E82D4':o.rate>10?'#E07A00':'#D94035';
+    c.innerHTML+=`<div class="orow"><div class="orn">${i+1}</div><div><div class="oname">${o.name}</div><div class="odec">${o.dec.toLocaleString('fr-FR')} déc. · ${o.statut==='conflit'?'⚔️ conflit':'✅ stable'}</div></div><div class="obw"><div class="ob" style="width:${pct}%;background:${col}"></div></div><div class="orate" style="color:${col}">${o.rate.toFixed(1)}%</div></div>`;
+  });
+}
+renderOriginDetail('all');
+function filterOrigin(f,btn){document.querySelectorAll('#page-origines .fbtn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderOriginDetail(f);updateOriginChart(f);}
+
+// ——— TIMELINE ———
+const tlc=document.getElementById('timeline-content');
+timelineData.forEach(t=>{
+  tlc.innerHTML+=`<div class="tli"><div class="tldot" style="background:${t.dot};border-color:${t.dot}"></div><div class="tlyear">${t.year}</div><div class="tlrate">${t.rate}</div><div class="tltext">${t.text}</div><span class="tlctx" style="background:${t.ctxBg};color:${t.ctxCol}">${t.ctx}</span></div>`;
+});
+
+// ——— CHART.JS ———
+
+// Time chart with annotations
+const timeCtx=document.getElementById('timeChart');
+const timeChart=new Chart(timeCtx,{
+  type:'line',
+  data:{
+    labels:['2015','2016','2017','2018','2019','2020','2021','2022','2023'],
+    datasets:[{
+      label:"Taux (%)",
+      data:[24.3,18.0,17.4,16.1,17.2,18.5,19.8,20.9,21.4],
+      borderColor:'#1A4A9B',
+      backgroundColor:'rgba(26,74,155,0.06)',
+      pointBackgroundColor:(ctx)=>{const v=[24.3,18.0,17.4,16.1,17.2,18.5,19.8,20.9,21.4][ctx.dataIndex];return v===16.1?'#D94035':v===24.3?'#00A878':'#1A4A9B'},
+      pointBorderColor:'#fff',pointBorderWidth:2,
+      pointRadius:(ctx)=>{const v=[24.3,18.0,17.4,16.1,17.2,18.5,19.8,20.9,21.4][ctx.dataIndex];return(v===16.1||v===24.3)?7:4},
+      tension:0.4,fill:true,
+    }]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{
+      legend:{display:false},
+      tooltip:{callbacks:{label:ctx=>' '+ctx.parsed.y.toFixed(1)+' %'}},
+      annotation:{
+        annotations:{
+          crise:{type:'line',xMin:'2016',xMax:'2016',borderColor:'#D94035',borderWidth:1.5,borderDash:[4,3],label:{content:'Crise syrienne + pic',display:true,position:'start',backgroundColor:'rgba(217,64,53,0.85)',color:'#fff',font:{size:10,weight:'600'},padding:{x:6,y:3}}},
+          accord:{type:'line',xMin:'2018',xMax:'2018',borderColor:'#F5A800',borderWidth:1.5,borderDash:[4,3],label:{content:'Plancher — politiques restrictives',display:true,position:'end',backgroundColor:'rgba(245,168,0,0.9)',color:'#0A2357',font:{size:10,weight:'600'},padding:{x:6,y:3}}},
+          covid:{type:'line',xMin:'2020',xMax:'2020',borderColor:'#7B8FB5',borderWidth:1.5,borderDash:[4,3],label:{content:'COVID-19',display:true,position:'start',backgroundColor:'rgba(123,143,181,0.85)',color:'#fff',font:{size:10,weight:'600'},padding:{x:6,y:3}}},
+          reprise:{type:'line',xMin:'2023',xMax:'2023',borderColor:'#00A878',borderWidth:1.5,borderDash:[4,3],label:{content:'Normalisation',display:true,position:'end',backgroundColor:'rgba(0,168,120,0.85)',color:'#fff',font:{size:10,weight:'600'},padding:{x:6,y:3}}},
+        }
+      }
+    },
+    scales:{
+      x:{ticks:{color:'#7B8FB5',font:{size:11}},grid:{color:'rgba(10,35,87,0.05)'}},
+      y:{min:14,max:26,ticks:{color:'#7B8FB5',font:{size:11},callback:v=>v+'%'},grid:{color:'rgba(10,35,87,0.05)'}}
+    }
+  }
+});
+
+// Scatter PIB
+const scatterData=allCountries.map(c=>({x:c.pib,y:c.rate,label:c.name,group:c.group}));
+const scatterChart=new Chart(document.getElementById('scatterChart'),{
+  type:'scatter',
+  data:{
+    datasets:[
+      {label:'Très accueillant',data:scatterData.filter(d=>d.group==='Très accueillant'),backgroundColor:'rgba(0,168,120,0.75)',pointRadius:7,pointHoverRadius:9},
+      {label:'Intermédiaire',data:scatterData.filter(d=>d.group==='Intermédiaire'),backgroundColor:'rgba(46,130,212,0.75)',pointRadius:7,pointHoverRadius:9},
+      {label:'Très restrictif',data:scatterData.filter(d=>d.group==='Très restrictif'),backgroundColor:'rgba(217,64,53,0.75)',pointRadius:7,pointHoverRadius:9},
+    ]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{
+      legend:{display:false},
+      tooltip:{callbacks:{label:ctx=>`${ctx.raw.label} — PIB: ${(ctx.raw.x/1000).toFixed(0)}k€ · Taux: ${ctx.raw.y.toFixed(1)}%`}}
+    },
+    scales:{
+      x:{title:{display:true,text:'PIB par habitant (€)',color:'#7B8FB5',font:{size:11}},ticks:{color:'#7B8FB5',font:{size:10},callback:v=>(v/1000).toFixed(0)+'k'},grid:{color:'rgba(10,35,87,0.05)'}},
+      y:{title:{display:true,text:"Taux d'acceptation (%)",color:'#7B8FB5',font:{size:11}},ticks:{color:'#7B8FB5',font:{size:11},callback:v=>v+'%'},grid:{color:'rgba(10,35,87,0.05)'}}
+    }
+  }
+});
+
+// GDP group bars
+new Chart(document.getElementById('gdpGroupChart'),{
+  type:'bar',
+  data:{
+    labels:['PIB élevé\n(NO,DK,LU)','PIB moyen\n(FR,DE,IE)','PIB faible\n(PL,BG,LV)'],
+    datasets:[{label:'Taux moyen',data:[40.2,12.5,8.9],backgroundColor:['#00A878','#2E82D4','#D94035'],borderRadius:8,borderSkipped:false}]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+ctx.parsed.y.toFixed(1)+' %'}}},
+    scales:{
+      x:{ticks:{color:'#7B8FB5',font:{size:11}},grid:{display:false}},
+      y:{ticks:{color:'#7B8FB5',font:{size:11},callback:v=>v+'%'},grid:{color:'rgba(10,35,87,0.05)'}}
+    }
+  }
+});
+
+// Hypothesis bar
+new Chart(document.getElementById('hypChart'),{
+  type:'bar',
+  data:{
+    labels:['H1 — Volume','H2 — Crise','H3 — Temporel (normalisé)','H4 — PIB'],
+    datasets:[{label:'Force |r|',data:[0.022,0.016,0.75,0.754],backgroundColor:['#D94035','#E07A00','#00A878','#00A878'],borderRadius:6,borderSkipped:false}]
+  },
+  options:{
+    indexAxis:'y',responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' r = '+ctx.parsed.x.toFixed(3)}}},
+    scales:{
+      x:{min:0,max:1,ticks:{color:'#7B8FB5',font:{size:11}},grid:{color:'rgba(10,35,87,0.05)'}},
+      y:{ticks:{color:'#4A5E82',font:{size:12,weight:'500'}},grid:{display:false}}
+    }
+  }
+});
+
+// Origin chart (page 4)
+let originChartInst=null;
+function buildOriginChart(filter){
+  let data=allOrigins;
+  if(filter==='conflit') data=data.filter(x=>x.statut==='conflit');
+  else if(filter==='stable') data=data.filter(x=>x.statut==='stable');
+  else if(['est','ouest','nord','centrale'].includes(filter)) data=data.filter(x=>x.region===filter);
+  const labels=data.map(d=>d.name);
+  const values=data.map(d=>d.rate);
+  const colors=data.map(d=>d.rate>40?'#00A878':d.rate>20?'#2E82D4':d.rate>10?'#E07A00':'#D94035');
+  return{labels,values,colors};
+}
+function updateOriginChart(filter){
+  const {labels,values,colors}=buildOriginChart(filter);
+  if(originChartInst){originChartInst.destroy();}
+  const h=Math.max(340,labels.length*28+60);
+  document.getElementById('originChart').parentElement.style.height=h+'px';
+  originChartInst=new Chart(document.getElementById('originChart'),{
+    type:'bar',
+    data:{labels,datasets:[{label:'Taux',data:values,backgroundColor:colors,borderRadius:5,borderSkipped:false}]},
+    options:{
+      indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+ctx.parsed.x.toFixed(1)+' %'}}},
+      scales:{
+        x:{min:0,max:70,ticks:{color:'#7B8FB5',font:{size:11},callback:v=>v+'%'},grid:{color:'rgba(10,35,87,0.05)'}},
+        y:{ticks:{color:'#4A5E82',font:{size:11}},grid:{display:false}}
+      }
+    }
+  });
+}
+updateOriginChart('all');
+
+// Region chart
+new Chart(document.getElementById('regionChart'),{
+  type:'bar',
+  data:{
+    labels:["Afrique de l'Est","Afrique Centrale","Afrique de l'Ouest","Afrique du Nord"],
+    datasets:[{label:'Taux moyen',data:[35.5,25.5,18.2,4.8],backgroundColor:['#00A878','#2E82D4','#E07A00','#D94035'],borderRadius:7,borderSkipped:false}]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+ctx.parsed.y.toFixed(1)+' %'}}},
+    scales:{
+      x:{ticks:{color:'#7B8FB5',font:{size:10}},grid:{display:false}},
+      y:{ticks:{color:'#7B8FB5',font:{size:11},callback:v=>v+'%'},grid:{color:'rgba(10,35,87,0.05)'}}
+    }
+  }
+});
+
+// Crisis vs stable
+new Chart(document.getElementById('crisisChart'),{
+  type:'doughnut',
+  data:{
+    labels:['Pays en conflit/crise','Pays stables'],
+    datasets:[{data:[38.5,6.8],backgroundColor:['#00A878','#D94035'],borderWidth:3,borderColor:'#fff',hoverBorderWidth:4}]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    cutout:'68%',
+    plugins:{
+      legend:{display:true,position:'bottom',labels:{font:{size:12},color:'#4A5E82',padding:16}},
+      tooltip:{callbacks:{label:ctx=>' '+ctx.raw.toFixed(1)+' %'}}
+    }
+  }
+});
+
+// Synthesis radar (conclusions)
+new Chart(document.getElementById('synthChart'),{
+  type:'radar',
+  data:{
+    labels:['H1 Volume','H2 Crise','H3 Temporel','H4 PIB','Robustesse stat.','Pertinence métier'],
+    datasets:[{
+      label:'Score analytique',
+      data:[5,45,78,95,88,82],
+      backgroundColor:'rgba(26,74,155,0.12)',
+      borderColor:'#1A4A9B',
+      pointBackgroundColor:'#1A4A9B',
+      pointBorderColor:'#fff',pointBorderWidth:2,pointRadius:5,
+    }]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+ctx.raw+'/100'}}},
+    scales:{r:{min:0,max:100,ticks:{color:'#7B8FB5',font:{size:10},backdropColor:'transparent'},grid:{color:'rgba(10,35,87,0.10)'},pointLabels:{color:'#4A5E82',font:{size:11}}}}
+  }
+});
+</script>
+</body>
+</html>
