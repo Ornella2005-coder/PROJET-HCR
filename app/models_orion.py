@@ -53,9 +53,9 @@ TARGET_REG   = "taux"
 TARGET_BIN   = "accepte_binaire"
 TARGET_CAT   = "categorie"
 
-# Chemin par défaut (même dossier que ce fichier → output/dataset_final.csv)
+# Chemin par défaut : data/cleaned/dataset_final.csv (à la racine du dépôt)
 _HERE      = os.path.dirname(os.path.abspath(__file__))
-DATA_PATH  = os.path.join(_HERE, "output", "dataset_final.csv")
+DATA_PATH  = os.path.join(_HERE, "..", "data", "cleaned", "dataset_final.csv")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -64,7 +64,7 @@ DATA_PATH  = os.path.join(_HERE, "output", "dataset_final.csv")
 
 def load_real_data(path=None):
     """
-    Charge output/dataset_final.csv généré par analyse_hcr.ipynb.
+    Charge data/cleaned/dataset_final.csv généré par analyse_hcr.ipynb.
     path : chemin personnalisé (optionnel, pour Streamlit file_uploader).
     """
     p = path or DATA_PATH
@@ -73,7 +73,7 @@ def load_real_data(path=None):
         if not os.path.exists(p):
             raise FileNotFoundError(
                 f"Fichier introuvable : {p}\n"
-                "→ Lancez d'abord analyse_hcr.ipynb pour générer output/dataset_final.csv"
+                "→ Lancez d'abord analyse_hcr.ipynb pour générer data/cleaned/dataset_final.csv"
             )
         df = pd.read_csv(p)
     else:

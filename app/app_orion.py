@@ -4,7 +4,7 @@ HCR / UNHCR — Bureau Europe
 Auteure : FANGNON Ornella — Bachelor 2 Data & BI — NEXA Digital School
 
 Lancement :
-    python -m streamlit run app_orion.py
+    python -m streamlit run app/app_orion.py
 
 Dépendances :
     pip install streamlit scikit-learn pandas numpy matplotlib seaborn
@@ -140,7 +140,7 @@ with st.sidebar:
     uploaded = st.file_uploader(
         "Charger dataset_final.csv",
         type=["csv"],
-        help="Fichier généré par analyse_hcr.ipynb dans output/dataset_final.csv"
+        help="Fichier généré par analyse_hcr.ipynb dans data/cleaned/dataset_final.csv"
     )
 
     st.markdown("---")
@@ -224,7 +224,7 @@ if uploaded is None:
     ⚠️ <b>Aucun fichier chargé.</b><br>
     Dans la sidebar → <b>"Charger dataset_final.csv"</b><br>
     Ce fichier est généré automatiquement par <code>analyse_hcr.ipynb</code>
-    dans le dossier <code>output/</code>.
+    dans le dossier <code>data/cleaned/</code>.
     </div>
     """, unsafe_allow_html=True)
 
@@ -559,7 +559,7 @@ with tab_log:
                         if val else "background-color:#FDECEA;color:#7A1F1F")
             st.dataframe(
                 log_df.style
-                .applymap(style_correct, subset=["Correct"])
+                .map(style_correct, subset=["Correct"])
                 .format({"Prob. acceptation": "{:.3f}"}),
                 use_container_width=True, height=430
             )
